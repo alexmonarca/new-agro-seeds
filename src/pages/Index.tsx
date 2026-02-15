@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import newagroLogo from "@/assets/logo-NEWagro-site.png";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import ProductCatalog from "@/components/catalog/ProductCatalog";
+import MainHeader from "@/components/layout/MainHeader";
+import HeroVideoSection from "@/components/sections/HeroVideoSection";
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [search, setSearch] = useState("");
@@ -40,70 +41,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4 md:py-5">
-          <div className="flex items-center gap-3">
-            <img
-              src={newagroLogo}
-              alt="Logo NEWagro - Soluções em agricultura de precisão"
-              className="h-10 w-auto md:h-12"
-              loading="lazy"
-            />
-          </div>
-
-          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
-            <a href="/" className="hover:text-foreground">
-              Produtos
-            </a>
-            <a href="/servicos" className="hover:text-foreground">
-              Serviços
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {!isAuthenticated ? (
-              <>
-                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-                  <a href="/login">Entrar</a>
-                </Button>
-                <Button asChild size="sm" className="shadow-md">
-                  <a href="/login">Registrar</a>
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" variant="outline" onClick={handleLogout} className="shadow-none">
-                Sair
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
+      <MainHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
 
       <div role="main">
         {/* Hero gradient */}
-        <section className="hero-gradient">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:py-14">
-            <div className="md:w-2/3">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] opacity-80">
-                Tecnologia agrícola de precisão
-              </p>
-              <h1
-                id="hero-title"
-                className="mb-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl"
-              >
-                Tecnologia Agrícola de Precisão
-              </h1>
-              <p className="mb-6 max-w-xl text-base opacity-90 md:text-lg">
-                Soluções completas em agricultura de precisão, piloto automático e sistemas de pulverização para
-                maximizar sua produtividade.
-              </p>
-
-              <Button size="lg" className="bg-white text-[hsl(var(--brand-green))] hover:bg-white/90">
-                Explorar Catálogo
-              </Button>
-            </div>
-          </div>
-        </section>
+          <HeroVideoSection videoSrc={"/videos/newagro-hero.mp4"} />
 
         {/* Barra de busca e filtro de categorias */}
         <section className="border-b border-border bg-background">
