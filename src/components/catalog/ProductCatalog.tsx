@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export type CatalogItemType = "product" | "service";
 
 export type CatalogItem = {
-  id: string;
+  id: string | number;
   name: string;
   category: string;
   item_type: CatalogItemType;
   price: number | null;
   images?: unknown;
+  is_active?: boolean;
+  sort_order?: number;
 };
 
 function formatPriceBRL(price: number) {
@@ -46,7 +48,9 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
 
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,category,item_type,price,images")
+        .select("id,name,category,item_type,price,images,is_active,sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
         .order("category", { ascending: true })
         .order("name", { ascending: true });
 
