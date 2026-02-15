@@ -1,16 +1,227 @@
-import { useEffect } from "react";
-
+import { useCallback, useEffect, useState } from "react";
+import newagroLogo from "@/assets/logo-NEWagro-site.png";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
+import ProductCatalog from "@/components/catalog/ProductCatalog";
 const Index = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const { toast } = useToast();
+
+  const handleCategories = useCallback((cats: string[]) => {
+    setAvailableCategories(cats);
+  }, []);
   useEffect(() => {
-    document.title = "NEWagro_v2";
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getUser();
+      setIsAuthenticated(!!data.user);
+    };
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({ title: "Você saiu da sua conta." });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">NEWagro_v2</h1>
-        <p className="text-xl text-muted-foreground">Projeto em branco.</p>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4 md:py-5">
+          <div className="flex items-center gap-3">
+            <img
+              src={newagroLogo}
+              alt="Logo NEWagro - Soluções em agricultura de precisão"
+              className="h-10 w-auto md:h-12"
+              loading="lazy"
+            />
+          </div>
+
+          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
+            <a href="/" className="hover:text-foreground">
+              Produtos
+            </a>
+            <a href="/servicos" className="hover:text-foreground">
+              Serviços
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            {!isAuthenticated ? (
+              <>
+                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+                  <a href="/login">Entrar</a>
+                </Button>
+                <Button asChild size="sm" className="shadow-md">
+                  <a href="/login">Registrar</a>
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={handleLogout} className="shadow-none">
+                Sair
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div role="main">
+        {/* Hero gradient */}
+        <section className="hero-gradient">
+          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:py-14">
+            <div className="md:w-2/3">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] opacity-80">
+                Tecnologia agrícola de precisão
+              </p>
+              <h1
+                id="hero-title"
+                className="mb-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl"
+              >
+                Tecnologia Agrícola de Precisão
+              </h1>
+              <p className="mb-6 max-w-xl text-base opacity-90 md:text-lg">
+                Soluções completas em agricultura de precisão, piloto automático e sistemas de pulverização para
+                maximizar sua produtividade.
+              </p>
+
+              <Button size="lg" className="bg-white text-[hsl(var(--brand-green))] hover:bg-white/90">
+                Explorar Catálogo
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Barra de busca e filtro de categorias */}
+        <section className="border-b border-border bg-background">
+          <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 md:flex-row md:items-center">
+            <div className="relative flex-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                🔍
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar produtos..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-sm text-foreground shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-green))] focus-visible:ring-offset-2"
+              />
+            </div>
+            <div className="md:w-56">
+              <select
+                className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-green))] focus-visible:ring-offset-2"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="all">Todas as categorias</option>
+                {availableCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </section>
+
+        {/* Conteúdo principal: apenas catálogo de produtos */}
+        <section id="catalogo" className="mx-auto mt-10 max-w-6xl space-y-4 px-4 pb-16">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground md:text-xl">Catálogo de Produtos</h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Confira abaixo os principais pilotos automáticos, GPS agrícolas, sensores e soluções em pulverização com suporte
+            especializado NEWagro.
+          </p>
+
+          <ProductCatalog search={search} category={category} onCategories={handleCategories} />
+        </section>
       </div>
+
+      <footer>
+        {/* faixa verde de suporte */}
+        <section className="footer-support mt-auto">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-10 text-center md:py-12">
+            <h2 className="text-2xl font-semibold md:text-3xl">Precisa de Suporte Técnico?</h2>
+            <p className="max-w-2xl text-sm md:text-base">
+              Entre em contato conosco para assistência especializada em agricultura de precisão.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="https://wa.me/555596194261"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-medium text-[hsl(var(--brand-green))] shadow-md"
+              >
+                <span>📞</span>
+                <span>(55) 99619-4261</span>
+              </a>
+              <Button asChild className="rounded-full bg-white px-5 py-2 text-sm font-medium text-[hsl(var(--brand-green))] shadow-md hover:bg-white/90">
+                <a href="mailto:newagroasb@gmail.com">Enviar Email</a>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* rodapé escuro com colunas */}
+        <section className="footer-main border-t border-border text-xs text-muted-foreground">
+          <div className="mx-auto max-w-6xl px-4 py-8">
+            <div className="grid gap-6 md:grid-cols-4">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">NEWagro</h3>
+                <p className="mt-2 text-xs text-muted-foreground">Soluções em agricultura de precisão</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Produtos</h3>
+                <ul className="mt-2 space-y-1 text-xs">
+                  <li>Piloto Automático</li>
+                  <li>Pulverizadores</li>
+                  <li>GPS Agrícola</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Empresa</h3>
+                <ul className="mt-2 space-y-1 text-xs">
+                  <li><a href="/servicos" className="hover:underline">Serviços</a></li>
+                  <li><a href="/servicos#sobre" className="hover:underline">Sobre</a></li>
+                  <li><a href="/servicos#contato" className="hover:underline">Contato</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Contato</h3>
+                <ul className="mt-2 space-y-1 text-xs">
+                  <li>WhatsApp: (55) 99619-4261</li>
+                  <li>São Borja - RS</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-border pt-4 text-[11px] md:flex-row">
+              <a
+                href="https://instagram.com/newagrosb"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-foreground hover:underline"
+              >
+                <span aria-hidden>📷</span>
+                <span>Instagram</span>
+              </a>
+              <p>© {new Date().getFullYear()} NEWagro. Todos os direitos reservados.</p>
+            </div>
+          </div>
+        </section>
+      </footer>
     </div>
   );
 };
