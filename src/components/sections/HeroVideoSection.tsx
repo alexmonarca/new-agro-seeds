@@ -10,7 +10,7 @@ export default function HeroVideoSection({ videoSrc }: HeroVideoSectionProps) {
       {/* Vídeo de fundo */}
       {videoSrc ? (
         <video
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full origin-center scale-110 object-cover"
           src={videoSrc}
           autoPlay
           muted
@@ -27,7 +27,7 @@ export default function HeroVideoSection({ videoSrc }: HeroVideoSectionProps) {
       <div className="absolute inset-0 bg-primary/70" aria-hidden="true" />
 
       <div className="relative z-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:py-14">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-10 sm:px-8 md:flex-row md:items-center md:py-14 lg:px-12">
           <div className="md:w-2/3">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/90">
               Tecnologia agrícola de precisão
