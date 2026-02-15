@@ -49,7 +49,7 @@ const Index = () => {
 
         {/* Barra de busca e filtro de categorias */}
         <section className="border-b border-border bg-background">
-          <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 md:flex-row md:items-center">
+          <div className="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-4 sm:px-8 md:flex-row md:items-center lg:px-12">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 🔍
@@ -80,7 +80,7 @@ const Index = () => {
         </section>
 
         {/* Conteúdo principal: apenas catálogo de produtos */}
-        <section id="catalogo" className="mx-auto mt-10 max-w-6xl space-y-4 px-4 pb-16">
+        <section id="catalogo" className="mx-auto mt-10 max-w-5xl space-y-4 px-6 pb-16 sm:px-8 lg:px-12">
           <h2 className="text-lg font-semibold tracking-tight text-foreground md:text-xl">Catálogo de Produtos</h2>
           <p className="max-w-2xl text-sm text-muted-foreground">
             Confira abaixo os principais pilotos automáticos, GPS agrícolas, sensores e soluções em pulverização com suporte
@@ -94,7 +94,7 @@ const Index = () => {
       <footer>
         {/* faixa verde de suporte */}
         <section className="footer-support mt-auto">
-          <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-10 text-center md:py-12">
+          <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-10 text-center sm:px-8 md:py-12 lg:px-12">
             <h2 className="text-2xl font-semibold md:text-3xl">Precisa de Suporte Técnico?</h2>
             <p className="max-w-2xl text-sm md:text-base">
               Entre em contato conosco para assistência especializada em agricultura de precisão.
@@ -118,7 +118,7 @@ const Index = () => {
 
         {/* rodapé escuro com colunas */}
         <section className="footer-main border-t border-border text-xs text-muted-foreground">
-          <div className="mx-auto max-w-6xl px-4 py-8">
+          <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 lg:px-12">
             <div className="grid gap-6 md:grid-cols-4">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">NEWagro</h3>
