@@ -7,6 +7,7 @@ import MainHeader from "@/components/layout/MainHeader";
 import HeroVideoSection from "@/components/sections/HeroVideoSection";
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -15,18 +16,43 @@ const Index = () => {
   const handleCategories = useCallback((cats: string[]) => {
     setAvailableCategories(cats);
   }, []);
+
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getUser();
-      setIsAuthenticated(!!data.user);
+    const syncAuth = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+        return;
+      }
+
+      const authed = !!data.user;
+      setIsAuthenticated(authed);
+
+      if (!data.user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const roleRes = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      setIsAdmin(!!roleRes.data);
     };
 
-    checkSession();
+    syncAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session?.user);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const authed = !!session?.user;
+      setIsAuthenticated(authed);
+
+      if (!session?.user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const roleRes = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
+      setIsAdmin(!!roleRes.data);
     });
 
     return () => {
@@ -36,12 +62,14 @@ const Index = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setIsAdmin(false);
     toast({ title: "Você saiu da sua conta." });
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <MainHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+      <MainHeader isAuthenticated={isAuthenticated} isAdmin={isAdmin} onLogout={handleLogout} />
 
       <div role="main">
         {/* Hero gradient */}
