@@ -93,7 +93,7 @@ const Index = () => {
 
       <div role="main">
         {/* Hero gradient */}
-          <HeroVideoSection videoSrc={"/videos/newagro-hero.mp4"} />
+        <HeroVideoSection youtubeUrl="https://www.youtube.com/watch?v=OrP8m0HZWCY" />
 
         {/* Barra de busca e filtro de categorias */}
         <section className="border-b border-border bg-background">
