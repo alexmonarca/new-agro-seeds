@@ -15,6 +15,25 @@ export type CatalogItem = {
   sort_order?: number;
 };
 
+type ProductImage = {
+  url: string;
+  path: string;
+  alt?: string;
+};
+
+function normalizeImages(images: unknown): ProductImage[] {
+  if (!images || !Array.isArray(images)) return [];
+  return images
+    .map((x) => {
+      if (!x || typeof x !== "object") return null;
+      const obj = x as any;
+      if (typeof obj.url !== "string" || typeof obj.path !== "string") return null;
+      const alt = typeof obj.alt === "string" ? obj.alt : undefined;
+      return { url: obj.url, path: obj.path, alt } satisfies ProductImage;
+    })
+    .filter(Boolean) as ProductImage[];
+}
+
 function formatPriceBRL(price: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -143,22 +162,50 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((item) => (
-          <Card key={item.id} className="shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{item.name}</CardTitle>
-              <p className="text-xs text-muted-foreground">{item.category}</p>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">{item.item_type === "service" ? "Serviço" : "Produto"}</span>
-                <span className="text-sm font-semibold text-foreground">
-                  {item.price == null ? "Sob consulta" : formatPriceBRL(item.price)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {filtered.map((item) => {
+          const imgs = normalizeImages(item.images);
+          const cover = imgs[0]?.url ?? null;
+          const coverAlt = imgs[0]?.alt ?? item.name;
+
+          return (
+            <Card key={item.id} className="overflow-hidden shadow-sm">
+              <a href={`/produto/${item.id}`} className="block" aria-label={`Ver detalhes de ${item.name}`}>
+                {cover ? (
+                  <img
+                    src={cover}
+                    alt={coverAlt}
+                    className="aspect-[4/3] w-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
+                ) : (
+                  <div className="flex aspect-[4/3] items-center justify-center bg-muted text-xs text-muted-foreground">
+                    Sem imagem
+                  </div>
+                )}
+              </a>
+
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  <a href={`/produto/${item.id}`} className="hover:underline">
+                    {item.name}
+                  </a>
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">{item.category}</p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-muted-foreground">{item.item_type === "service" ? "Serviço" : "Produto"}</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {item.price == null ? "Sob consulta" : formatPriceBRL(item.price)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
