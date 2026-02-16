@@ -1,61 +1,16 @@
 import { Button } from "@/components/ui/button";
 
 type HeroVideoSectionProps = {
-  /** URL de vídeo do YouTube (ex: https://www.youtube.com/watch?v=...) */
-  youtubeUrl?: string;
-  /** Fonte mp4 opcional (ex: /videos/newagro-hero.mp4) */
   videoSrc?: string;
 };
 
-function getYouTubeId(url: string): string | null {
-  try {
-    const u = new URL(url);
-
-    if (u.hostname === "youtu.be") {
-      return u.pathname.replace("/", "") || null;
-    }
-
-    if (u.hostname.includes("youtube.com")) {
-      const v = u.searchParams.get("v");
-      if (v) return v;
-
-      // /embed/{id} ou /shorts/{id}
-      const parts = u.pathname.split("/").filter(Boolean);
-      const embedIndex = parts.indexOf("embed");
-      if (embedIndex >= 0 && parts[embedIndex + 1]) return parts[embedIndex + 1];
-
-      const shortsIndex = parts.indexOf("shorts");
-      if (shortsIndex >= 0 && parts[shortsIndex + 1]) return parts[shortsIndex + 1];
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-export default function HeroVideoSection({ youtubeUrl, videoSrc }: HeroVideoSectionProps) {
-  const youtubeId = youtubeUrl ? getYouTubeId(youtubeUrl) : null;
-  const youtubeEmbedSrc = youtubeId
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3`
-    : null;
-
+export default function HeroVideoSection({ videoSrc }: HeroVideoSectionProps) {
   return (
     <section className="relative overflow-hidden">
       {/* Vídeo de fundo */}
-      {youtubeEmbedSrc ? (
-        <iframe
-          className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover [width:140%] [height:140%]"
-          src={youtubeEmbedSrc}
-          title="Vídeo institucional NEWagro"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-          aria-hidden="true"
-        />
-      ) : videoSrc ? (
+      {videoSrc ? (
         <video
-          className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover [width:140%] [height:140%]"
+          className="absolute inset-0 h-full w-full origin-center scale-140 object-cover"
           src={videoSrc}
           autoPlay
           muted
@@ -84,8 +39,8 @@ export default function HeroVideoSection({ youtubeUrl, videoSrc }: HeroVideoSect
               Tecnologia Agrícola de Precisão
             </h1>
             <p className="mb-6 max-w-xl text-base text-primary-foreground/90 md:text-lg">
-              Soluções completas em agricultura de precisão, piloto automático e sistemas de pulverização para maximizar sua
-              produtividade.
+              Soluções completas em agricultura de precisão, piloto automático e sistemas de pulverização para maximizar
+              sua produtividade.
             </p>
 
             <Button size="lg" variant="secondary" className="shadow-md">
