@@ -79,17 +79,16 @@ export default function HeroVideoSection({ videoSrc, youtubeUrl }: HeroVideoSect
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-10 sm:px-8 md:flex-row md:items-center md:py-14 lg:px-12">
           <div className="md:w-2/3">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/90">
-              Tecnologia agrícola de precisão
+              MAXIMIZE SUA PRODUTIVIDADE
             </p>
             <h1
               id="hero-title"
               className="mb-4 text-3xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-4xl md:text-5xl"
             >
-              Tecnologia Agrícola de Precisão
+              Agricultura Inteligente, Resultados Reais
             </h1>
             <p className="mb-6 max-w-xl text-base text-primary-foreground/90 md:text-lg">
-              Soluções completas em agricultura de precisão, piloto automático e sistemas de pulverização para maximizar sua
-              produtividade.
+              Piloto automático, GPS de precisão e sistemas de pulverização que reduzem custos e aumentam sua produção.
             </p>
 
             <Button size="lg" variant="secondary" className="shadow-md">
