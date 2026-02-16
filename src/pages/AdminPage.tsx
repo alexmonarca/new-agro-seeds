@@ -88,7 +88,12 @@ async function ensureAuthedAndAdmin(): Promise<{ userId: string } | null> {
     _role: "admin",
   });
 
-  if (roleRes.error) return null;
+  if (roleRes.error) {
+    // Ajuda a diagnosticar rapidamente quando a função/RLS não estiverem como esperado
+    console.error("RPC has_role falhou:", roleRes.error);
+    return null;
+  }
+
   if (!roleRes.data) return null;
 
   return { userId: data.user.id };

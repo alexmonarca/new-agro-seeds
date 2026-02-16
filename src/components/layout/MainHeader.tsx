@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 
 type MainHeaderProps = {
   isAuthenticated: boolean;
+  isAdmin?: boolean;
   onLogout: () => void;
 };
 
-export default function MainHeader({ isAuthenticated, onLogout }: MainHeaderProps) {
+export default function MainHeader({ isAuthenticated, isAdmin = false, onLogout }: MainHeaderProps) {
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4 sm:px-8 md:py-5 lg:px-12">
@@ -27,6 +28,11 @@ export default function MainHeader({ isAuthenticated, onLogout }: MainHeaderProp
             <a href="/servicos" className="hover:text-foreground">
               Serviços
             </a>
+            {isAuthenticated && isAdmin ? (
+              <a href="/admin" className="hover:text-foreground">
+                Painel admin
+              </a>
+            ) : null}
           </nav>
 
           <div className="flex items-center gap-3">
