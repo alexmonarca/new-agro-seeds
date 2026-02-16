@@ -10,7 +10,7 @@ export default function HeroVideoSection({ videoSrc }: HeroVideoSectionProps) {
       {/* Vídeo de fundo */}
       {videoSrc ? (
         <video
-          className="absolute inset-0 h-full w-full origin-center scale-140 object-cover"
+          className="absolute inset-0 h-full w-full origin-center scale-110 object-cover"
           src={videoSrc}
           autoPlay
           muted
