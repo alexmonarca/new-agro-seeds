@@ -45,7 +45,7 @@ export default function HeroVideoSection({ youtubeUrl, videoSrc }: HeroVideoSect
       {/* Vídeo de fundo */}
       {youtubeEmbedSrc ? (
         <iframe
-          className="absolute inset-0 h-full w-full origin-center scale-110 object-cover"
+          className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover [width:140%] [height:140%]"
           src={youtubeEmbedSrc}
           title="Vídeo institucional NEWagro"
           allow="autoplay; encrypted-media; picture-in-picture"
@@ -55,7 +55,7 @@ export default function HeroVideoSection({ youtubeUrl, videoSrc }: HeroVideoSect
         />
       ) : videoSrc ? (
         <video
-          className="absolute inset-0 h-full w-full origin-center scale-110 object-cover"
+          className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover [width:140%] [height:140%]"
           src={videoSrc}
           autoPlay
           muted
