@@ -28,7 +28,7 @@ export default function MainHeader({ isAuthenticated, isAdmin = false, onLogout 
             <a href="/servicos" className="hover:text-foreground">
               Serviços
             </a>
-            {isAuthenticated && isAdmin ? (
+            {isAuthenticated ? (
               <a href="/admin" className="hover:text-foreground">
                 Painel admin
               </a>

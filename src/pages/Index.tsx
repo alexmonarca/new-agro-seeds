@@ -35,6 +35,11 @@ const Index = () => {
       }
 
       const roleRes = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      if (roleRes.error) {
+        console.error("RPC has_role falhou (Index):", roleRes.error);
+        setIsAdmin(false);
+        return;
+      }
       setIsAdmin(!!roleRes.data);
     };
 
@@ -52,6 +57,11 @@ const Index = () => {
       }
 
       const roleRes = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
+      if (roleRes.error) {
+        console.error("RPC has_role falhou (Index onAuthStateChange):", roleRes.error);
+        setIsAdmin(false);
+        return;
+      }
       setIsAdmin(!!roleRes.data);
     });
 
@@ -61,10 +71,20 @@ const Index = () => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsAuthenticated(false);
-    setIsAdmin(false);
-    toast({ title: "Você saiu da sua conta." });
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+      toast({ title: "Você saiu da sua conta." });
+    } catch (error: any) {
+      console.error("Falha ao sair:", error);
+      toast({
+        variant: "destructive",
+        title: "Não foi possível sair",
+        description: error?.message ?? "Tente novamente.",
+      });
+    }
   };
 
   return (
