@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type ProductImage = {
   url: string;
@@ -366,62 +367,123 @@ export default function AdminPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Painel administrador</h1>
           <p className="mt-1 text-sm text-muted-foreground">Gerencie produtos/serviços, fotos e especificações.</p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou categoria…" />
-          <Button onClick={startCreate} className="shrink-0">Novo item</Button>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <Button variant="outline" onClick={() => navigate("/")}
+            className="shrink-0"
+          >
+            Voltar para a loja
+          </Button>
         </div>
       </header>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Itens cadastrados</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {loading ? (
-            <div className="py-6 text-sm text-muted-foreground">Carregando…</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Preço</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ordem</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell>{p.category ?? "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{p.item_type === "service" ? "Serviço" : "Produto"}</TableCell>
-                    <TableCell>{p.price == null ? "Sob consulta" : formatPriceBRL(p.price)}</TableCell>
-                    <TableCell>
-                      <span className={p.is_active ? "text-foreground" : "text-muted-foreground"}>
-                        {p.is_active ? "Ativo" : "Inativo"}
-                      </span>
-                    </TableCell>
-                    <TableCell>{p.sort_order}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
-                          Editar
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => remove(p)}>
-                          Excluir
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="itens" className="w-full">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <TabsList className="w-full md:w-auto">
+            <TabsTrigger value="itens">Itens</TabsTrigger>
+            <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+            <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+          </TabsList>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou categoria…" />
+            <Button onClick={startCreate} className="shrink-0">Novo item</Button>
+          </div>
+        </div>
+
+        <TabsContent value="itens" className="mt-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Itens cadastrados</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {loading ? (
+                <div className="py-6 text-sm text-muted-foreground">Carregando…</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Preço</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Ordem</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell className="font-medium">{p.name}</TableCell>
+                        <TableCell>{p.category ?? "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{p.item_type === "service" ? "Serviço" : "Produto"}</TableCell>
+                        <TableCell>{p.price == null ? "Sob consulta" : formatPriceBRL(p.price)}</TableCell>
+                        <TableCell>
+                          <span className={p.is_active ? "text-foreground" : "text-muted-foreground"}>
+                            {p.is_active ? "Ativo" : "Inativo"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{p.sort_order}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
+                              Editar
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => remove(p)}>
+                              Excluir
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="config" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Configurações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Placeholder: aqui vão as configurações de pagamento (ex: PagBank/PagSeguro) quando formos integrar.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="relatorios" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Relatórios</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Placeholder: relatórios de visitas e vendas (quando tivermos tracking + tabela de pedidos).
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="usuarios" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Usuários</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Placeholder: listagem de usuários e status de compra/favoritos (depende de tabelas de orders/favorites).
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
