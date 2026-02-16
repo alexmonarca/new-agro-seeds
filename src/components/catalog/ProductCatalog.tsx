@@ -40,47 +40,64 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
 
   useEffect(() => {
     let mounted = true;
+    let timeout: number | undefined;
 
     const run = async () => {
       // Não limpamos itens aqui para evitar "piscar"
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
-        .from("products")
-        .select("id,name,category,item_type,price,images,is_active,sort_order")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true })
-        .order("category", { ascending: true })
-        .order("name", { ascending: true });
-
-      if (!mounted) return;
-
-      if (error) {
-        setError(error.message);
+      // Watchdog: evita ficar preso em "Carregando..." caso a requisição trave
+      timeout = window.setTimeout(() => {
+        if (!mounted) return;
+        setError("Tempo excedido ao carregar o catálogo. Tente recarregar a página.");
         setLoading(false);
-        return;
+      }, 12000);
+
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("id,name,category,item_type,price,images,is_active,sort_order")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .order("category", { ascending: true })
+          .order("name", { ascending: true });
+
+        if (!mounted) return;
+
+        if (error) {
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+
+        const safe = (data ?? []) as CatalogItem[];
+        setItems(safe);
+        setLoading(false);
+
+        const cats = Array.from(
+          new Set(
+            safe
+              .map((x) => (x.category ?? "").trim())
+              .filter(Boolean)
+              .sort((a, b) => a.localeCompare(b, "pt-BR")),
+          ),
+        );
+        onCategoriesRef.current?.(cats);
+      } catch (e: any) {
+        if (!mounted) return;
+        setError(e?.message ?? "Erro inesperado ao carregar o catálogo.");
+        setLoading(false);
+      } finally {
+        if (timeout) window.clearTimeout(timeout);
       }
-
-      const safe = (data ?? []) as CatalogItem[];
-      setItems(safe);
-      setLoading(false);
-
-      const cats = Array.from(
-        new Set(
-          safe
-            .map((x) => (x.category ?? "").trim())
-            .filter(Boolean)
-            .sort((a, b) => a.localeCompare(b, "pt-BR")),
-        ),
-      );
-      onCategoriesRef.current?.(cats);
     };
 
     run();
 
     return () => {
       mounted = false;
+      if (timeout) window.clearTimeout(timeout);
     };
   }, []);
 

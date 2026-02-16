@@ -27,23 +27,33 @@ const ServicesPage = () => {
     };
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({ title: "Você saiu da sua conta." });
-  };
+   const handleLogout = async () => {
+     try {
+       const { error } = await supabase.auth.signOut();
+       if (error) throw error;
+       toast({ title: "Você saiu da sua conta." });
+     } catch (error: any) {
+       console.error("Falha ao sair (Serviços):", error);
+       toast({
+         variant: "destructive",
+         title: "Não foi possível sair",
+         description: error?.message ?? "Tente novamente.",
+       });
+     }
+   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-4 md:py-5">
-          <div className="flex items-center gap-3">
-            <img
-              src={newagroLogo}
-              alt="Logo NEWagro - Soluções em agricultura de precisão"
-              className="h-10 w-auto md:h-12"
-              loading="lazy"
-            />
-          </div>
+           <a href="/" className="flex items-center gap-3" aria-label="Ir para a página inicial">
+             <img
+               src={newagroLogo}
+               alt="Logo NEWagro - Soluções em agricultura de precisão"
+               className="h-10 w-auto md:h-12"
+               loading="lazy"
+             />
+           </a>
 
           <nav className="ml-auto hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
             <a href="/" className="hover:text-foreground">
