@@ -46,9 +46,9 @@ export default function HeroVideoSection({ videoSrc, youtubeUrl }: HeroVideoSect
           <iframe
             className={
               "absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 " +
-              // O iframe não respeita object-fit; usamos scale responsivo para preencher e cortar as bordas.
-              "scale-150 sm:scale-160 md:scale-175 lg:scale-[2] " +
-              // Mantém o conteúdo sempre cobrindo a área mesmo em proporções extremas.
+              // No mobile, ampliamos bem mais para cortar as bordas (letterbox) do vídeo.
+              "scale-[2.35] xs:scale-[2.5] sm:scale-[2.2] md:scale-[2.05] lg:scale-[2.15] " +
+              // Mantém cobrindo a área mesmo em proporções extremas.
               "min-h-full min-w-full"
             }
             src={youtubeEmbedSrc}
