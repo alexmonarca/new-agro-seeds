@@ -1,14 +1,59 @@
 import { Button } from "@/components/ui/button";
 
 type HeroVideoSectionProps = {
+  /** URL de vídeo do YouTube (ex: https://www.youtube.com/watch?v=...) */
+  youtubeUrl?: string;
+  /** Fonte mp4 opcional (ex: /videos/newagro-hero.mp4) */
   videoSrc?: string;
 };
 
-export default function HeroVideoSection({ videoSrc }: HeroVideoSectionProps) {
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+
+    if (u.hostname === "youtu.be") {
+      return u.pathname.replace("/", "") || null;
+    }
+
+    if (u.hostname.includes("youtube.com")) {
+      const v = u.searchParams.get("v");
+      if (v) return v;
+
+      // /embed/{id} ou /shorts/{id}
+      const parts = u.pathname.split("/").filter(Boolean);
+      const embedIndex = parts.indexOf("embed");
+      if (embedIndex >= 0 && parts[embedIndex + 1]) return parts[embedIndex + 1];
+
+      const shortsIndex = parts.indexOf("shorts");
+      if (shortsIndex >= 0 && parts[shortsIndex + 1]) return parts[shortsIndex + 1];
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export default function HeroVideoSection({ youtubeUrl, videoSrc }: HeroVideoSectionProps) {
+  const youtubeId = youtubeUrl ? getYouTubeId(youtubeUrl) : null;
+  const youtubeEmbedSrc = youtubeId
+    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3`
+    : null;
+
   return (
     <section className="relative overflow-hidden">
       {/* Vídeo de fundo */}
-      {videoSrc ? (
+      {youtubeEmbedSrc ? (
+        <iframe
+          className="absolute inset-0 h-full w-full origin-center scale-110 object-cover"
+          src={youtubeEmbedSrc}
+          title="Vídeo institucional NEWagro"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+          aria-hidden="true"
+        />
+      ) : videoSrc ? (
         <video
           className="absolute inset-0 h-full w-full origin-center scale-110 object-cover"
           src={videoSrc}
