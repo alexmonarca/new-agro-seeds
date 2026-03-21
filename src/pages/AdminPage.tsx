@@ -54,6 +54,7 @@ type ProductDraft = Omit<
   id?: number;
   images?: ProductImage[];
   specificationsText?: string;
+  productCode?: string;
 };
 
 const BUCKET = "product-images";
@@ -113,6 +114,32 @@ function normalizeImages(images: unknown): ProductImage[] {
     .filter(Boolean) as ProductImage[];
 }
 
+function readProductCode(specifications: Record<string, unknown> | null | undefined): string {
+  if (!specifications || typeof specifications !== "object") return "";
+  const fromSnake = specifications.product_code;
+  if (typeof fromSnake === "string") return fromSnake;
+  const fromLabel = specifications["Cód. produto"];
+  if (typeof fromLabel === "string") return fromLabel;
+  return "";
+}
+
+function mergeProductCodeInSpecifications(
+  specifications: Record<string, unknown> | null,
+  productCode: string,
+): Record<string, unknown> | null {
+  const base = specifications && typeof specifications === "object" ? { ...specifications } : {};
+  const trimmedCode = productCode.trim();
+
+  if (trimmedCode) {
+    base.product_code = trimmedCode;
+  } else {
+    delete base.product_code;
+    delete base["Cód. produto"];
+  }
+
+  return Object.keys(base).length > 0 ? base : null;
+}
+
 function toDraft(p?: ProductRow): ProductDraft {
   if (!p) {
     return {
@@ -126,6 +153,7 @@ function toDraft(p?: ProductRow): ProductDraft {
       item_type: "product",
       images: [],
       specificationsText: "{}",
+      productCode: "",
     };
   }
 
@@ -141,6 +169,7 @@ function toDraft(p?: ProductRow): ProductDraft {
     item_type: p.item_type ?? "product",
     images: normalizeImages(p.images),
     specificationsText: JSON.stringify(p.specifications ?? {}, null, 2),
+    productCode: readProductCode(p.specifications),
   };
 }
 
@@ -156,6 +185,13 @@ export default function AdminPage() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<ProductDraft>(() => toDraft());
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+
+  const categoryOptions = useMemo(() => {
+    const all = [...rows.map((r) => (r.category ?? "").trim()), ...customCategories, (draft.category ?? "").trim()]
+      .filter(Boolean);
+    return Array.from(new Set(all)).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [rows, customCategories, draft.category]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -239,6 +275,8 @@ export default function AdminPage() {
       return;
     }
 
+    const mergedSpecs = mergeProductCodeInSpecifications(specs, draft.productCode ?? "");
+
     const payload: any = {
       name: draft.name.trim(),
       description: (draft.description ?? "").trim() || null,
@@ -248,7 +286,7 @@ export default function AdminPage() {
       stock: draft.stock === null || draft.stock === undefined || Number.isNaN(draft.stock) ? null : Number(draft.stock),
       is_active: !!draft.is_active,
       sort_order: Number.isFinite(draft.sort_order) ? Number(draft.sort_order) : 0,
-      specifications: specs,
+      specifications: mergedSpecs,
       images: draft.images ?? [],
     };
 
@@ -489,13 +527,13 @@ export default function AdminPage() {
         <DialogTrigger asChild>
           <span className="sr-only">Abrir editor</span>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-h-[92vh] max-w-2xl overflow-hidden">
           <DialogHeader>
             <DialogTitle>{draft.id ? "Editar item" : "Novo item"}</DialogTitle>
             <DialogDescription>Preencha os campos e salve. Para enviar fotos, salve o item primeiro.</DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid max-h-[calc(92vh-190px)] gap-4 overflow-y-auto pr-1 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Nome</label>
               <Input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
@@ -503,7 +541,37 @@ export default function AdminPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Categoria</label>
-              <Input value={draft.category ?? ""} onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))} />
+              <select
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={(draft.category ?? "").trim()}
+                onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categoryOptions.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Adicionar/editar nome da categoria"
+                  value={draft.category ?? ""}
+                  onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const value = (draft.category ?? "").trim();
+                    if (!value) return;
+                    setCustomCategories((prev) => (prev.includes(value) ? prev : [...prev, value]));
+                  }}
+                >
+                  Salvar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Escolha no dropdown ou digite para criar/editar uma categoria.</p>
             </div>
 
             <div className="space-y-2">
@@ -558,6 +626,15 @@ export default function AdminPage() {
                   onChange={(e) => setDraft((d) => ({ ...d, sort_order: Number(e.target.value) }))}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cód. produto</label>
+              <Input
+                value={draft.productCode ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, productCode: e.target.value }))}
+                placeholder="Ex.: TR-001"
+              />
             </div>
 
             <div className="space-y-2 md:col-span-2">
