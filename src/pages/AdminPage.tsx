@@ -31,6 +31,13 @@ type ProductImage = {
   alt?: string;
 };
 
+type PendingImage = {
+  id: string;
+  file: File;
+  previewUrl: string;
+  alt?: string;
+};
+
 type ProductRow = {
   id: number;
   name: string;
@@ -186,6 +193,17 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<ProductDraft>(() => toDraft());
   const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+
+  const revokePendingPreviews = () => {
+    setPendingImages((prev) => {
+      prev.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+      return [];
+    });
+  };
+
+  const normalizePersistedImages = (images?: ProductImage[]) =>
+    (images ?? []).filter((img) => !img.path.startsWith("local-"));
 
   const categoryOptions = useMemo(() => {
     const all = [...rows.map((r) => (r.category ?? "").trim()), ...customCategories, (draft.category ?? "").trim()]
@@ -256,13 +274,39 @@ export default function AdminPage() {
   }, []);
 
   const startCreate = () => {
+    revokePendingPreviews();
     setDraft(toDraft());
     setOpen(true);
   };
 
   const startEdit = (p: ProductRow) => {
+    revokePendingPreviews();
     setDraft(toDraft(p));
     setOpen(true);
+  };
+
+  const uploadFilesToBucket = async (productId: number, files: File[]) => {
+    const uploaded: ProductImage[] = [];
+
+    for (const file of files) {
+      const ext = file.name.split(".").pop() || "bin";
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-");
+      const path = `products/${productId}/${crypto.randomUUID()}.${ext}-${safeName}`;
+
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined,
+      });
+      if (upErr) throw upErr;
+
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      if (!data?.publicUrl) throw new Error("Não foi possível obter a URL pública da imagem.");
+
+      uploaded.push({ url: data.publicUrl, path, alt: file.name });
+    }
+
+    return uploaded;
   };
 
   const save = async () => {
@@ -276,6 +320,7 @@ export default function AdminPage() {
     }
 
     const mergedSpecs = mergeProductCodeInSpecifications(specs, draft.productCode ?? "");
+    const persistedImages = normalizePersistedImages(draft.images);
 
     const payload: any = {
       name: draft.name.trim(),
@@ -287,7 +332,7 @@ export default function AdminPage() {
       is_active: !!draft.is_active,
       sort_order: Number.isFinite(draft.sort_order) ? Number(draft.sort_order) : 0,
       specifications: mergedSpecs,
-      images: draft.images ?? [],
+      images: persistedImages,
     };
 
     try {
@@ -303,10 +348,25 @@ export default function AdminPage() {
           .single();
         if (error) throw error;
         toast({ title: "Produto criado" });
+
+        if (data?.id && pendingImages.length > 0) {
+          const uploaded = await uploadFilesToBucket(
+            data.id,
+            pendingImages.map((img) => img.file),
+          );
+          const finalImages = [...persistedImages, ...uploaded];
+          const { error: updateImagesError } = await supabase
+            .from("products")
+            .update({ images: finalImages })
+            .eq("id", data.id);
+          if (updateImagesError) throw updateImagesError;
+        }
+
         if (data?.id) setDraft((d) => ({ ...d, id: data.id }));
       }
 
       setOpen(false);
+      revokePendingPreviews();
       await load();
     } catch (e: any) {
       toast({ variant: "destructive", title: "Erro ao salvar", description: e?.message ?? "Não foi possível salvar." });
@@ -331,8 +391,21 @@ export default function AdminPage() {
 
   const uploadImages = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+
+    const selectedFiles = Array.from(files);
+
     if (!draft.id) {
-      toast({ variant: "destructive", title: "Salve primeiro", description: "Crie/salve o produto antes de enviar imagens." });
+      const localImages: ProductImage[] = selectedFiles.map((file) => {
+        const id = `local-${crypto.randomUUID()}`;
+        const previewUrl = URL.createObjectURL(file);
+
+        setPendingImages((prev) => [...prev, { id, file, previewUrl, alt: file.name }]);
+
+        return { url: previewUrl, path: id, alt: file.name };
+      });
+
+      setDraft((d) => ({ ...d, images: [...(d.images ?? []), ...localImages] }));
+      toast({ title: "Pré-visualização pronta", description: "As imagens serão enviadas quando você salvar o novo produto." });
       return;
     }
 
@@ -340,23 +413,8 @@ export default function AdminPage() {
     const next: ProductImage[] = [...current];
 
     try {
-      for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop() || "bin";
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-");
-        const path = `products/${draft.id}/${crypto.randomUUID()}.${ext}-${safeName}`;
-
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type || undefined,
-        });
-        if (upErr) throw upErr;
-
-        const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        if (!data?.publicUrl) throw new Error("Não foi possível obter a URL pública da imagem.");
-
-        next.push({ url: data.publicUrl, path, alt: file.name });
-      }
+      const uploaded = await uploadFilesToBucket(draft.id, selectedFiles);
+      next.push(...uploaded);
 
       setDraft((d) => ({ ...d, images: next }));
       const { error } = await supabase.from("products").update({ images: next }).eq("id", draft.id);
@@ -370,6 +428,17 @@ export default function AdminPage() {
   };
 
   const deleteImage = async (img: ProductImage) => {
+    if (img.path.startsWith("local-")) {
+      setPendingImages((prev) => {
+        const target = prev.find((x) => x.id === img.path);
+        if (target) URL.revokeObjectURL(target.previewUrl);
+        return prev.filter((x) => x.id !== img.path);
+      });
+      setDraft((d) => ({ ...d, images: (d.images ?? []).filter((x) => x.path !== img.path) }));
+      toast({ title: "Imagem removida" });
+      return;
+    }
+
     if (!draft.id) return;
 
     try {
@@ -523,7 +592,13 @@ export default function AdminPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) revokePendingPreviews();
+        }}
+      >
         <DialogTrigger asChild>
           <span className="sr-only">Abrir editor</span>
         </DialogTrigger>
@@ -534,6 +609,42 @@ export default function AdminPage() {
           </DialogHeader>
 
           <div className="grid max-h-[calc(92vh-190px)] gap-4 overflow-y-auto pr-1 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium">Fotos</label>
+              <Input type="file" accept="image/*" multiple onChange={(e) => uploadImages(e.target.files)} />
+
+              {(draft.images?.length ?? 0) > 0 ? (
+                <>
+                  <div className="overflow-hidden rounded-md border border-border">
+                    <img
+                      src={draft.images?.[0]?.url}
+                      alt={draft.images?.[0]?.alt || draft.name || "Imagem principal"}
+                      className="h-52 w-full object-cover md:h-64"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {draft.images!.map((img) => (
+                      <div key={img.path} className="rounded-md border border-border p-2">
+                        <img src={img.url} alt={img.alt || draft.name} className="h-20 w-full rounded object-cover" loading="lazy" />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 w-full"
+                          onClick={() => deleteImage(img)}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhuma foto ainda.</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Nome</label>
               <Input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
@@ -597,9 +708,10 @@ export default function AdminPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Estoque</label>
+                <label className="text-sm font-medium">Quantidade / unidades</label>
                 <Input
                   type="number"
+                  min="0"
                   value={draft.stock ?? ""}
                   onChange={(e) => setDraft((d) => ({ ...d, stock: e.target.value === "" ? null : Number(e.target.value) }))}
                 />
@@ -657,31 +769,6 @@ export default function AdminPage() {
               <p className="text-xs text-muted-foreground">Formato: objeto JSON (não array).</p>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium">Fotos</label>
-              <Input type="file" accept="image/*" multiple onChange={(e) => uploadImages(e.target.files)} />
-
-              {(draft.images?.length ?? 0) > 0 ? (
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                  {draft.images!.map((img) => (
-                    <div key={img.path} className="rounded-md border border-border p-2">
-                      <img src={img.url} alt={img.alt || draft.name} className="h-24 w-full rounded object-cover" loading="lazy" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-2 w-full"
-                        onClick={() => deleteImage(img)}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">Nenhuma foto ainda.</p>
-              )}
-            </div>
           </div>
 
           <DialogFooter>
