@@ -60,6 +60,7 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
   useEffect(() => {
     let mounted = true;
     let timeout: number | undefined;
+    let timedOut = false;
 
     const run = async () => {
       // Não limpamos itens aqui para evitar "piscar"
@@ -69,6 +70,7 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
       // Watchdog: evita ficar preso em "Carregando..." caso a requisição trave
       timeout = window.setTimeout(() => {
         if (!mounted) return;
+        timedOut = true;
         setError("Tempo excedido ao carregar o catálogo. Tente recarregar a página.");
         setLoading(false);
       }, 12000);
@@ -82,6 +84,8 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
           .order("category", { ascending: true })
           .order("name", { ascending: true });
 
+        if (timeout) window.clearTimeout(timeout);
+
         if (!mounted) return;
 
         if (error) {
@@ -92,6 +96,7 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
 
         const safe = (data ?? []) as CatalogItem[];
         setItems(safe);
+        setError(null);
         setLoading(false);
 
         const cats = Array.from(
@@ -105,7 +110,9 @@ export default function ProductCatalog({ search, category, onCategories }: Produ
         onCategoriesRef.current?.(cats);
       } catch (e: any) {
         if (!mounted) return;
-        setError(e?.message ?? "Erro inesperado ao carregar o catálogo.");
+        setError(
+          timedOut ? "Tempo excedido ao carregar o catálogo. Tente recarregar a página." : e?.message ?? "Erro inesperado ao carregar o catálogo.",
+        );
         setLoading(false);
       } finally {
         if (timeout) window.clearTimeout(timeout);
