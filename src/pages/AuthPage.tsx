@@ -30,7 +30,7 @@ const AuthPage = () => {
         if (error) throw error;
         toast({
           title: "Cadastro realizado",
-          description: "Verifique seu e-mail para confirmar a conta, se necessário.",
+          description: "Cadastro realizado! Você já pode fazer login quando preferir!",
         });
         setMode("login");
       }
