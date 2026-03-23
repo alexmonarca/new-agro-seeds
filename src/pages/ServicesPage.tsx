@@ -29,8 +29,9 @@ const ServicesPage = () => {
 
    const handleLogout = async () => {
      try {
-       const { error } = await supabase.auth.signOut();
+       const { error } = await supabase.auth.signOut({ scope: "local" });
        if (error) throw error;
+       setIsAuthenticated(false);
        toast({ title: "Você saiu da sua conta." });
      } catch (error: any) {
        console.error("Falha ao sair (Serviços):", error);

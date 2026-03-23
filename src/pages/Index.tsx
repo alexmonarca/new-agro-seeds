@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
@@ -12,29 +12,26 @@ const Index = () => {
   const [category, setCategory] = useState("all");
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const { toast } = useToast();
+  const authRequestIdRef = useRef(0);
 
   const handleCategories = useCallback((cats: string[]) => {
     setAvailableCategories(cats);
   }, []);
 
   useEffect(() => {
-    const syncAuth = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-        return;
-      }
-
-      const authed = !!data.user;
+    const syncAuth = async (user?: { id: string } | null) => {
+      const requestId = ++authRequestIdRef.current;
+      const authed = !!user;
       setIsAuthenticated(authed);
 
-      if (!data.user) {
+      if (!user) {
         setIsAdmin(false);
         return;
       }
 
-      const roleRes = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      const roleRes = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (requestId !== authRequestIdRef.current) return;
+
       if (roleRes.error) {
         console.error("RPC has_role falhou (Index):", roleRes.error);
         setIsAdmin(false);
@@ -43,26 +40,27 @@ const Index = () => {
       setIsAdmin(!!roleRes.data);
     };
 
-    syncAuth();
+    const bootstrap = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+        return;
+      }
+
+      await syncAuth(session?.user ? { id: session.user.id } : null);
+    };
+
+    void bootstrap();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const authed = !!session?.user;
-      setIsAuthenticated(authed);
-
-      if (!session?.user) {
-        setIsAdmin(false);
-        return;
-      }
-
-      const roleRes = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
-      if (roleRes.error) {
-        console.error("RPC has_role falhou (Index onAuthStateChange):", roleRes.error);
-        setIsAdmin(false);
-        return;
-      }
-      setIsAdmin(!!roleRes.data);
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncAuth(session?.user ? { id: session.user.id } : null);
     });
 
     return () => {
@@ -72,7 +70,7 @@ const Index = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({ scope: "local" });
       if (error) throw error;
       setIsAuthenticated(false);
       setIsAdmin(false);
