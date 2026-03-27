@@ -5,7 +5,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
 
 const slides = [
   { src: "/1.png", alt: "Produto em destaque NEWagro 1" },
