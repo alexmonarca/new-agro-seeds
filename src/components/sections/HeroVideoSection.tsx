@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type HeroVideoSectionProps = {
   /** Caminho para MP4 em /public, ex: "/videos/newagro-hero.mp4" */
   videoSrc?: string;
   /** URL do YouTube (watch/shorts/youtu.be) */
   youtubeUrl?: string;
+  /** Classes extras para ajustar altura/largura do hero (ex.: h-[480px]) */
+  className?: string;
 };
 
 function getYouTubeId(url: string): string | null {
@@ -32,14 +35,14 @@ function getYouTubeId(url: string): string | null {
   }
 }
 
-export default function HeroVideoSection({ videoSrc, youtubeUrl }: HeroVideoSectionProps) {
+export default function HeroVideoSection({ videoSrc, youtubeUrl, className }: HeroVideoSectionProps) {
   const youtubeId = youtubeUrl ? getYouTubeId(youtubeUrl) : null;
   const youtubeEmbedSrc = youtubeId
     ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&disablekb=1&fs=0`
     : null;
 
   return (
-    <section className="relative overflow-hidden">
+    <section className={cn("relative overflow-hidden", className)}>
       {/* Mídia de fundo (cover, sem bordas) */}
       <div className="absolute inset-0" aria-hidden="true">
         {youtubeEmbedSrc ? (
@@ -75,8 +78,8 @@ export default function HeroVideoSection({ videoSrc, youtubeUrl }: HeroVideoSect
       {/* Camada verde translúcida para legibilidade */}
       <div className="absolute inset-0 bg-primary/70" aria-hidden="true" />
 
-      <div className="relative z-10">
-        <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-10 sm:px-8 md:flex-row md:items-center md:py-14 lg:px-12">
+      <div className="relative z-10 h-full">
+        <div className="mx-auto flex h-full max-w-5xl flex-col justify-center gap-6 px-6 py-10 sm:px-8 md:flex-row md:items-center md:py-14 lg:px-12">
           <div className="md:w-2/3">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/90">
               MAXIMIZE SUA PRODUTIVIDADE
