@@ -16,7 +16,7 @@ const slides = [
 
 export default function HomeHeroSlider() {
   return (
-    <section className="relative overflow-hidden px-[1%] py-3 sm:px-6 sm:py-4 lg:px-10">
+    <section className="relative overflow-hidden px-0 py-3 sm:px-6 sm:py-4 lg:px-10">
       <div className="mx-auto h-[220px] w-full max-w-[1920px] sm:h-[300px] lg:h-[480px]">
       <Carousel opts={{ loop: true }} className="h-full w-full">
         <CarouselContent className="h-full">
@@ -25,7 +25,7 @@ export default function HomeHeroSlider() {
               <img
                 src={slide.src}
                 alt={slide.alt}
-                className="h-full w-full object-cover"
+                className="h-full w-full origin-center scale-[1.2] object-cover sm:scale-100"
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
