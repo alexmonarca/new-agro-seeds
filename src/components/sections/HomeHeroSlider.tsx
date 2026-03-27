@@ -16,11 +16,12 @@ const slides = [
 
 export default function HomeHeroSlider() {
   return (
-    <section className="relative h-[480px] overflow-hidden">
+    <section className="relative overflow-hidden px-4 py-3 sm:px-6 sm:py-4 lg:px-10">
+      <div className="mx-auto h-[220px] w-full max-w-[1920px] sm:h-[300px] lg:h-[480px]">
       <Carousel opts={{ loop: true }} className="h-full w-full">
         <CarouselContent className="h-full">
           {slides.map((slide) => (
-            <CarouselItem key={slide.src} className="h-[480px] pl-0">
+            <CarouselItem key={slide.src} className="h-full pl-0">
               <img
                 src={slide.src}
                 alt={slide.alt}
@@ -36,6 +37,7 @@ export default function HomeHeroSlider() {
         <CarouselPrevious className="left-4 z-20 border-border/70 bg-background/70 text-foreground hover:bg-background" />
         <CarouselNext className="right-4 z-20 border-border/70 bg-background/70 text-foreground hover:bg-background" />
       </Carousel>
+      </div>
     </section>
   );
 }
