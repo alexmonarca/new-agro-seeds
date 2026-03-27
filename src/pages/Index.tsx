@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import ProductCatalog from "@/components/catalog/ProductCatalog";
 import MainHeader from "@/components/layout/MainHeader";
-import HeroVideoSection from "@/components/sections/HeroVideoSection";
+import HomeHeroSlider from "@/components/sections/HomeHeroSlider";
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -90,8 +90,7 @@ const Index = () => {
       <MainHeader isAuthenticated={isAuthenticated} isAdmin={isAdmin} onLogout={handleLogout} />
 
       <div role="main">
-        {/* Hero gradient */}
-        <HeroVideoSection youtubeUrl="https://www.youtube.com/watch?v=OrP8m0HZWCY" />
+        <HomeHeroSlider />
 
         {/* Barra de busca e filtro de categorias */}
         <section className="border-b border-border bg-background">
