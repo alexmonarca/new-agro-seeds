@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import newagroLogo from "@/assets/logo-NEWagro-site.png";
 import { Button } from "@/components/ui/button";
+import HeroVideoSection from "@/components/sections/HeroVideoSection";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -80,6 +81,8 @@ const ServicesPage = () => {
           </div>
         </div>
       </header>
+
+      <HeroVideoSection youtubeUrl="https://www.youtube.com/watch?v=OrP8m0HZWCY" className="h-[480px]" />
 
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-10 md:pt-14">
         {/* Serviços em destaque */}
