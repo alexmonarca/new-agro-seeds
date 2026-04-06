@@ -79,7 +79,7 @@ export default function HeroVideoSection({ videoSrc, youtubeUrl, className }: He
       <div className="absolute inset-0 bg-primary/70" aria-hidden="true" />
 
       <div className="relative z-10 h-full">
-        <div className="mx-auto flex h-full max-w-5xl flex-col justify-center gap-6 px-6 py-10 sm:px-8 md:flex-row md:items-center md:py-14 lg:px-12">
+        <div className="mx-auto flex h-full max-w-5xl flex-col justify-center gap-6 px-6 py-10 sm:px-8 md:flex-row md:items-center md:justify-start md:py-14 lg:px-12">
           <div className="md:w-2/3">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/90">
               MAXIMIZE SUA PRODUTIVIDADE
