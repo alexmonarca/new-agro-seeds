@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
@@ -15,10 +17,24 @@ const slides = [
 ];
 
 export default function HomeHeroSlider() {
+  const [api, setApi] = useState<CarouselApi>();
+
+  useEffect(() => {
+    if (!api) return;
+
+    const interval = window.setInterval(() => {
+      api.scrollNext();
+    }, 3000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [api]);
+
   return (
     <section className="relative overflow-hidden px-0 py-3 sm:px-6 sm:py-4 lg:px-10">
       <div className="mx-auto h-[220px] w-full max-w-[1920px] sm:h-[300px] lg:h-[480px]">
-      <Carousel opts={{ loop: true }} className="h-full w-full">
+      <Carousel opts={{ loop: true }} setApi={setApi} className="h-full w-full">
         <CarouselContent className="h-full">
           {slides.map((slide) => (
             <CarouselItem key={slide.src} className="h-full pl-0">
