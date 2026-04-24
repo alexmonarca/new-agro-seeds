@@ -20,8 +20,28 @@ type ProductRow = {
   item_type: "product" | "service";
   price: number | null;
   images: ProductImage[] | null;
+  specifications?: Record<string, unknown> | null;
   is_active: boolean;
 };
+
+function getProductCode(product: ProductRow | null): string {
+  if (!product?.specifications || typeof product.specifications !== "object") {
+    return String(product?.id ?? "");
+  }
+
+  const specs = product.specifications as Record<string, unknown>;
+  const possibleCode = specs.product_code ?? specs.codigo ?? specs.code;
+
+  if (typeof possibleCode === "string" && possibleCode.trim()) {
+    return possibleCode.trim();
+  }
+
+  if (typeof possibleCode === "number") {
+    return String(possibleCode);
+  }
+
+  return String(product?.id ?? "");
+}
 
 function formatPriceBRL(price: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -76,7 +96,7 @@ export default function ProductDetailsPage() {
       try {
         const { data, error } = await supabase
           .from("products")
-          .select("id,name,description,category,item_type,price,images,is_active")
+          .select("id,name,description,category,item_type,price,images,specifications,is_active")
           .eq("id", productId)
           .maybeSingle();
 
@@ -161,6 +181,11 @@ export default function ProductDetailsPage() {
 
   const heroImage = product?.images?.[0]?.url ?? null;
   const heroAlt = product?.images?.[0]?.alt ?? product?.name ?? "Imagem do produto";
+  const productCode = getProductCode(product);
+  const whatsappMessage = product
+    ? `Olá! Quero comprar '${product.name}', cód. ${productCode}`
+    : "";
+  const buyHref = `https://wa.me/5555996194261?text=${encodeURIComponent(whatsappMessage)}`;
 
   const hasRelatedSection = !loading && !error && !!product;
 
@@ -263,18 +288,16 @@ export default function ProductDetailsPage() {
                   Favoritar
                 </Button>
                 <Button
-                  type="button"
-                  onClick={() => {
-                    // UI-only
-                    alert("(Visualização) Comprar/Pagamento (PagBank) será implementado depois.");
-                  }}
+                  asChild
                 >
-                  Comprar
+                  <a href={buyHref} target="_blank" rel="noopener noreferrer">
+                    Comprar
+                  </a>
                 </Button>
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Nota: esta tela é apenas para visualização; favoritos e pagamentos serão integrados depois.
+                Nota: favoritos será integrado depois; compra agora segue por WhatsApp.
               </p>
             </div>
           </section>
