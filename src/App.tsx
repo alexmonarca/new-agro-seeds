@@ -11,6 +11,7 @@ import ServicesPage from "./pages/ServicesPage";
 import AdminPage from "./pages/AdminPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import WhatsAppFloatingButton from "@/components/layout/WhatsAppFloatingButton";
+import FavoritesPage from "./pages/FavoritesPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/login" element={<AuthPage />} />
             <Route path="/servicos" element={<ServicesPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/produto/:id" element={<ProductDetailsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
