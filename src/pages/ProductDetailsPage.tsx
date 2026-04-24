@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import SiteFooter from "@/components/layout/SiteFooter";
+import { useToast } from "@/hooks/use-toast";
 
 type ProductImage = {
   url: string;
@@ -66,6 +67,7 @@ function normalizeImages(images: unknown): ProductImage[] {
 
 export default function ProductDetailsPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { id } = useParams();
   const productId = useMemo(() => {
     const n = Number(id);
@@ -79,6 +81,9 @@ export default function ProductDetailsPage() {
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [relatedError, setRelatedError] = useState<string | null>(null);
   const [related, setRelated] = useState<ProductRow[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -131,6 +136,60 @@ export default function ProductDetailsPage() {
       mounted = false;
     };
   }, [productId]);
+
+  useEffect(() => {
+    const bootstrapAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUserId(session?.user?.id ?? null);
+    };
+
+    void bootstrapAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkFavorite = async () => {
+      if (!userId || productId == null) {
+        setIsFavorite(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("product_id", productId)
+        .maybeSingle();
+
+      if (!mounted) return;
+      if (error) {
+        console.error("Erro ao verificar favorito:", error);
+        setIsFavorite(false);
+        return;
+      }
+
+      setIsFavorite(!!data);
+    };
+
+    void checkFavorite();
+
+    return () => {
+      mounted = false;
+    };
+  }, [userId, productId]);
 
   useEffect(() => {
     let mounted = true;
@@ -186,6 +245,51 @@ export default function ProductDetailsPage() {
     ? `Olá! Quero comprar '${product.name}', cód. ${productCode}`
     : "";
   const buyHref = `https://wa.me/5555996194261?text=${encodeURIComponent(whatsappMessage)}`;
+
+  const handleToggleFavorite = async () => {
+    if (!product || productId == null) return;
+
+    if (!userId) {
+      toast({ title: "Faça login para favoritar produtos." });
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorite) {
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", userId)
+          .eq("product_id", productId);
+
+        if (error) throw error;
+
+        setIsFavorite(false);
+        toast({ title: "Produto removido dos favoritos." });
+      } else {
+        const { error } = await supabase.from("favorites").insert({
+          user_id: userId,
+          product_id: productId,
+        });
+
+        if (error) throw error;
+
+        setIsFavorite(true);
+        toast({ title: "Produto adicionado aos favoritos." });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Não foi possível atualizar favorito",
+        description: error?.message ?? "Tente novamente.",
+      });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   const hasRelatedSection = !loading && !error && !!product;
 
@@ -282,15 +386,8 @@ export default function ProductDetailsPage() {
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    // UI-only
-                    alert("(Visualização) Favoritar será implementado depois.");
-                  }}
-                >
-                  Favoritar
+                <Button type="button" variant="outline" onClick={handleToggleFavorite} disabled={favoriteLoading}>
+                  {favoriteLoading ? "Salvando..." : isFavorite ? "Desfavoritar" : "Favoritar"}
                 </Button>
                 <Button
                   asChild
@@ -301,9 +398,7 @@ export default function ProductDetailsPage() {
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Nota: favoritos será integrado depois; compra agora segue por WhatsApp.
-              </p>
+              <p className="text-xs text-muted-foreground">Compra agora segue por WhatsApp.</p>
             </div>
           </section>
         )}
