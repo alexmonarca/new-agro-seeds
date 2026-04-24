@@ -276,6 +276,11 @@ export default function ProductDetailsPage() {
                 </p>
               </div>
 
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="text-sm text-muted-foreground">Código do produto</p>
+                <p className="mt-1 text-base font-semibold text-foreground">{productCode}</p>
+              </div>
+
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   type="button"
