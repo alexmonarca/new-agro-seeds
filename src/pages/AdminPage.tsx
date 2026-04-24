@@ -64,6 +64,15 @@ type ProductDraft = Omit<
   productCode?: string;
 };
 
+type UserRow = {
+  id: string;
+  email: string;
+  name: string | null;
+  phone: string | null;
+  created_at: string | null;
+  last_signed_in: string | null;
+};
+
 const BUCKET = "product-images";
 
 function parseJsonObject(input: string): Record<string, unknown> | null {
@@ -187,6 +196,8 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(true);
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [q, setQ] = useState("");
 
   const [open, setOpen] = useState(false);
@@ -247,6 +258,24 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  const loadUsers = async () => {
+    setUsersLoading(true);
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id,email,name,phone,created_at,last_signed_in")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setUsersLoading(false);
+      toast({ variant: "destructive", title: "Erro ao carregar usuários", description: error.message });
+      return;
+    }
+
+    setUsers((data ?? []) as UserRow[]);
+    setUsersLoading(false);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -262,7 +291,7 @@ export default function AdminPage() {
       }
 
       setChecking(false);
-      await load();
+      await Promise.all([load(), loadUsers()]);
     };
 
     run();
@@ -557,10 +586,16 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle className="text-base">Configurações</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Placeholder: aqui vão as configurações de pagamento (ex: PagBank/PagSeguro) quando formos integrar.
-              </p>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">Passo a passo para conectar o Mercado Pago:</p>
+              <ol className="list-decimal space-y-2 pl-5 text-sm text-foreground">
+                <li>Crie ou acesse sua conta no Mercado Pago Developers.</li>
+                <li>No painel, crie uma aplicação e gere as credenciais de teste e produção.</li>
+                <li>Copie a Public Key e o Access Token de cada ambiente.</li>
+                <li>No projeto, cadastre as chaves com segurança (nunca exponha Access Token no frontend).</li>
+                <li>Configure o checkout para usar as credenciais de teste e valide o fluxo de pagamento.</li>
+                <li>Depois dos testes, altere para produção e confirme os webhooks de notificação.</li>
+              </ol>
             </CardContent>
           </Card>
         </TabsContent>
@@ -570,9 +605,10 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle className="text-base">Relatórios</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Placeholder: relatórios de visitas e vendas (quando tivermos tracking + tabela de pedidos).
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground">Relatórios avançados disponíveis sob contratação.</p>
+              <p className="text-sm font-medium text-foreground">
+                Para ver relatórios de número de visitantes, visualizações por produto, conversas no Chat com IA e outros benefícios, o valor é de R$ 150 mensais.
               </p>
             </CardContent>
           </Card>
@@ -584,9 +620,50 @@ export default function AdminPage() {
               <CardTitle className="text-base">Usuários</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Placeholder: listagem de usuários e status de compra/favoritos (depende de tabelas de orders/favorites).
-              </p>
+              {usersLoading ? (
+                <div className="py-6 text-sm text-muted-foreground">Carregando usuários…</div>
+              ) : users.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum usuário cadastrado até o momento.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>E-mail</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Cadastro</TableHead>
+                      <TableHead>Último acesso</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name?.trim() || "—"}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.phone?.trim() || "—"}</TableCell>
+                        <TableCell>
+                          {user.created_at
+                            ? new Date(user.created_at).toLocaleDateString("pt-BR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          {user.last_signed_in
+                            ? new Date(user.last_signed_in).toLocaleDateString("pt-BR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
