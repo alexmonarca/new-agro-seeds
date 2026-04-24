@@ -64,6 +64,15 @@ type ProductDraft = Omit<
   productCode?: string;
 };
 
+type UserRow = {
+  id: string;
+  email: string;
+  name: string | null;
+  phone: string | null;
+  created_at: string | null;
+  last_signed_in: string | null;
+};
+
 const BUCKET = "product-images";
 
 function parseJsonObject(input: string): Record<string, unknown> | null {
@@ -187,6 +196,8 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(true);
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [q, setQ] = useState("");
 
   const [open, setOpen] = useState(false);
@@ -247,6 +258,24 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  const loadUsers = async () => {
+    setUsersLoading(true);
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id,email,name,phone,created_at,last_signed_in")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setUsersLoading(false);
+      toast({ variant: "destructive", title: "Erro ao carregar usuários", description: error.message });
+      return;
+    }
+
+    setUsers((data ?? []) as UserRow[]);
+    setUsersLoading(false);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -262,7 +291,7 @@ export default function AdminPage() {
       }
 
       setChecking(false);
-      await load();
+      await Promise.all([load(), loadUsers()]);
     };
 
     run();
