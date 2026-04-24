@@ -289,7 +289,6 @@ export default function ProductDetailsPage() {
                 </Button>
                 <Button
                   asChild
-                  type="button"
                 >
                   <a href={buyHref} target="_blank" rel="noopener noreferrer">
                     Comprar
@@ -298,7 +297,7 @@ export default function ProductDetailsPage() {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Nota: esta tela é apenas para visualização; favoritos e pagamentos serão integrados depois.
+                Nota: favoritos será integrado depois; compra agora segue por WhatsApp.
               </p>
             </div>
           </section>
