@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import ServicesPage from "./pages/ServicesPage";
+import ServicesCategoryPage from "./pages/ServicesCategoryPage";
 import AdminPage from "./pages/AdminPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import WhatsAppFloatingButton from "@/components/layout/WhatsAppFloatingButton";
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/servicos" element={<ServicesPage />} />
+            <Route path="/categoria/servicos" element={<ServicesCategoryPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/produto/:id" element={<ProductDetailsPage />} />
