@@ -39,7 +39,7 @@ export default function HomeHeroSlider() {
         <CarouselContent className="h-full">
           {slides.map((slide) => (
             <CarouselItem key={slide.src} className="h-full pl-0">
-              <Link to="/servicos" aria-label="Ir para Serviços" className="block h-full w-full">
+              <Link to="/categoria/servicos" aria-label="Ir para Categoria Serviços" className="block h-full w-full">
                 <img
                   src={slide.src}
                   alt={slide.alt}
