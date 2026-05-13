@@ -39,18 +39,7 @@ export default function HomeHeroSlider() {
         <CarouselContent className="h-full">
           {slides.map((slide) => (
             <CarouselItem key={slide.src} className="h-full pl-0">
-              {slide.category === "instalacoes" ? (
-                <Link to="/servicos" aria-label="Ir para Serviços" className="block h-full w-full">
-                  <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    className="h-full w-full origin-center scale-[1.2] object-cover sm:scale-100"
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
-                  />
-                </Link>
-              ) : (
+              <Link to="/servicos" aria-label="Ir para Serviços" className="block h-full w-full">
                 <img
                   src={slide.src}
                   alt={slide.alt}
@@ -59,7 +48,7 @@ export default function HomeHeroSlider() {
                   decoding="async"
                   fetchPriority="high"
                 />
-              )}
+              </Link>
             </CarouselItem>
           ))}
         </CarouselContent>
