@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import MainHeader from "@/components/layout/MainHeader";
 import HomeHeroSlider from "@/components/sections/HomeHeroSlider";
+import ProductCatalog from "@/components/catalog/ProductCatalog";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -83,6 +84,10 @@ const ServicesCategoryPage = () => {
             </p>
           </section>
         </header>
+
+        <section id="catalogo-servicos" className="mx-auto max-w-5xl px-6 pb-16 sm:px-8 lg:px-12">
+          <ProductCatalog search="" category="serviços" onCategories={() => {}} />
+        </section>
       </main>
     </div>
   );
