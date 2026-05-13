@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Carousel,
   type CarouselApi,
@@ -9,11 +10,11 @@ import {
 } from "@/components/ui/carousel";
 
 const slides = [
-  { src: "/1.png", alt: "Produto em destaque NEWagro 1" },
-  { src: "/2.png", alt: "Produto em destaque NEWagro 2" },
-  { src: "/3.png", alt: "Produto em destaque NEWagro 3" },
-  { src: "/4.png", alt: "Produto em destaque NEWagro 4" },
-  { src: "/5.png", alt: "Produto em destaque NEWagro 5" },
+  { src: "/1.png", alt: "Produto em destaque NEWagro 1", category: "instalacoes" },
+  { src: "/2.png", alt: "Produto em destaque NEWagro 2", category: "instalacoes" },
+  { src: "/3.png", alt: "Produto em destaque NEWagro 3", category: "instalacoes" },
+  { src: "/4.png", alt: "Produto em destaque NEWagro 4", category: "instalacoes" },
+  { src: "/5.png", alt: "Produto em destaque NEWagro 5", category: "instalacoes" },
 ];
 
 export default function HomeHeroSlider() {
@@ -38,14 +39,27 @@ export default function HomeHeroSlider() {
         <CarouselContent className="h-full">
           {slides.map((slide) => (
             <CarouselItem key={slide.src} className="h-full pl-0">
-              <img
-                src={slide.src}
-                alt={slide.alt}
-                className="h-full w-full origin-center scale-[1.2] object-cover sm:scale-100"
-                loading="eager"
-                decoding="async"
-                fetchPriority="high"
-              />
+              {slide.category === "instalacoes" ? (
+                <Link to="/servicos" aria-label="Ir para Serviços" className="block h-full w-full">
+                  <img
+                    src={slide.src}
+                    alt={slide.alt}
+                    className="h-full w-full origin-center scale-[1.2] object-cover sm:scale-100"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </Link>
+              ) : (
+                <img
+                  src={slide.src}
+                  alt={slide.alt}
+                  className="h-full w-full origin-center scale-[1.2] object-cover sm:scale-100"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+              )}
             </CarouselItem>
           ))}
         </CarouselContent>
